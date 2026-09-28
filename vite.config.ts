@@ -6,17 +6,16 @@ import { sites } from "./build/sites-vite-plugin";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
+const SWIFT_DIGITALS_CLOUDFLARE_DATABASE_ID =
+  "78b276df-2d7d-42b5-a1ad-d7676a88dc01";
 
 const { d1, r2 } = hostingConfig;
-const cloudflareDatabaseId = process.env.SWIFT_D1_DATABASE_ID?.trim();
+const cloudflareDatabaseId = process.env.SWIFT_D1_DATABASE_ID?.trim() ||
+  (process.env.WORKERS_CI ? SWIFT_DIGITALS_CLOUDFLARE_DATABASE_ID : undefined);
 const cloudflareDatabaseName = process.env.SWIFT_D1_DATABASE_NAME?.trim();
 
 if (cloudflareDatabaseId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cloudflareDatabaseId)) {
   throw new Error("SWIFT_D1_DATABASE_ID must be the UUID of a D1 database in your Cloudflare account.");
-}
-
-if (process.env.WORKERS_CI && d1 && !cloudflareDatabaseId) {
-  throw new Error("Create a Cloudflare D1 database and set SWIFT_D1_DATABASE_ID in the Worker's build variables.");
 }
 
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
@@ -30,7 +29,7 @@ const localBindingConfig = {
     ? [
         {
           binding: d1,
-          database_name: cloudflareDatabaseName || "site-creator-d1",
+          database_name: cloudflareDatabaseName || (process.env.WORKERS_CI ? "swift-digitals-enquiries" : "site-creator-d1"),
           database_id: cloudflareDatabaseId || SITE_CREATOR_PLACEHOLDER_DATABASE_ID,
         },
       ]
